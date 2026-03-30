@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>PayloadDescription</key>
+			<string>Full Disk Access for Wired Server daemon</string>
+			<key>PayloadIdentifier</key>
+			<string>fr.read-write.WiredServer.tcc.policy</string>
+			<key>PayloadOrganization</key>
+			<string>Wired Server</string>
+			<key>PayloadType</key>
+			<string>com.apple.TCC.configuration-profile-policy</string>
+			<key>PayloadUUID</key>
+			<string>9A3B4C5D-6E7F-8091-A2B3-C4D5E6F70123</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>Services</key>
+			<dict>
+				<key>SystemPolicyAllFiles</key>
+				<array>
+					<dict>
+						<key>Allowed</key>
+						<true/>
+						<key>CodeRequirement</key>
+						<string>identifier "fr.read-write.WiredServer"</string>
+						<key>Comment</key>
+						<string>Wired Server daemon - Full Disk Access for serving files from external volumes</string>
+						<key>Identifier</key>
+						<string>fr.read-write.WiredServer</string>
+						<key>IdentifierType</key>
+						<string>bundleID</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Grants the Wired Server daemon Full Disk Access so it can serve files from external volumes. Required because macOS blocks LaunchDaemon processes from accessing removable APFS volumes via TCC.</string>
+	<key>PayloadDisplayName</key>
+	<string>Wired Server - Privacy Policy</string>
+	<key>PayloadIdentifier</key>
+	<string>fr.read-write.WiredServer.tcc</string>
+	<key>PayloadOrganization</key>
+	<string>Wired Server</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>4E5F6A7B-8C9D-0E1F-2345-6789ABCDEF01</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>
