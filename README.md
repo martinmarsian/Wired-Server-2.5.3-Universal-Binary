@@ -1,55 +1,80 @@
-# Wired Server Source Code
+# Wired Server 2.5.3 — Universal Binary
 
-This repository hosts Wired Server source code. You will find an Xcode project named "WiredServer.xcworkspace" that contains a Wired Server target ready to deploy a 10.10+ compatible application (x64).
+A macOS application for running a [Wired 2.0](https://github.com/nark/WiredServer) file server and chat server.
+This fork updates the original project for modern macOS (12 Monterey and later) with Apple Silicon support, a system service architecture, and a Universal Binary build.
 
-## Prerequisites
+## What's New in This Fork
 
-- Homebrew
-- OpenSSL
-- Mac OS X 10.8+
-- Xcode 4.6+
+- **Universal Binary** — runs natively on Apple Silicon (arm64) and Intel (x86_64)
+- **LaunchDaemon** — runs as a true system service at boot, independent of any logged-in user
+- **Dedicated service account** — the server process runs as a hidden system user (no interactive login)
+- **System data directory** — server data stored in `/Library/Wired/data/` (no longer in `~/Library`)
+- **Automatic migration** — existing installations are migrated on first Start
+- **SHA-256 / SHA-512 support** — updated crypto for modern clients
+- **OpenSSL 3.x compatibility** — updated for current OpenSSL API
 
-## How to compile Wired Server
+## System Requirements
 
-1. Install Homebrew : [https://brew.sh](https://brew.sh)
+| | |
+|---|---|
+| **macOS** | 12 Monterey or later |
+| **Architecture** | Universal (Apple Silicon + Intel) |
+| **Privileges** | Administrator password required for Install / Start / Stop |
 
-2. Install OpenSSL with homebrew:
+## Data Directory
 
-		brew install openssl
+| File | Path |
+|---|---|
+| Configuration | `/Library/Wired/data/etc/wired.conf` |
+| Log | `/Library/Wired/data/wired.log` |
+| Database | `/Library/Wired/data/database.sqlite3` |
+| Server binary | `/Library/Wired/wired` |
 
-1. Get sources on GitHub:
+## Building from Source
 
-		git clone https://github.com/nark/WiredServer.git
-		
-2. Move into the sources directory:
-		
-		cd WiredServer
-		
-3. Install requirements using CocoaPods:
+### Prerequisites
 
-		pod install
-		
-4. Open `WiredServer.xcworkspace` with Xcode
+- Xcode 14 or later
+- CocoaPods
 
-5. Select scheme `Wired Server` and be sure to use "Debug" Build Configuration
+### Steps
 
-6. Launch Build, Wired Server.app should launch automatically when finished
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/joergmaertin/Wired-Server-2.5.3-Universal-Binary.git
+   cd Wired-Server-2.5.3-Universal-Binary
+   ```
 
+2. Install CocoaPods dependencies:
+   ```bash
+   pod install
+   ```
 
-## Troubleshooting
+3. Open the workspace in Xcode:
+   ```bash
+   open WiredServer.xcworkspace
+   ```
 
-Be sure that "wired" target is listed in Taget Dependencies Build Phases of Wired Server target. If not, add it in order to compile wired binary for Mac.
+4. Select the **Wired Server** scheme and build.
+
+## External Volume Access (TCC)
+
+If your files directory is on an external volume, grant **Full Disk Access** to `/Library/Wired/wired` in:
+
+```
+System Settings → Privacy & Security → Full Disk Access
+```
 
 ## License
 
-This code is distributed under BSD license, and it is free for personal or commercial use.
-		
-- Copyright (c) 2003-2009 Axel Andersson, All rights reserved.
-- Copyright (c) 2011-2019 Rafaël Warnault, All rights reserved.
-		
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-		
-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-		
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Distributed under the BSD 2-Clause License.
 
+- Copyright © 2003–2009 Axel Andersson
+- Copyright © 2011–2026 Rafaël Warnault / Read-Write Software
+- macOS compatibility and maintenance by Professor©
+
+See `wired/LICENSE` for the full license text.
+
+## Original Project
+
+Based on [nark/WiredServer](https://github.com/nark/WiredServer) by Rafaël Warnault.
