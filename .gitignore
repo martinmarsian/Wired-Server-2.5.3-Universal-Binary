@@ -229,3 +229,18 @@ doc/*
 obj/*
 run/libwired/*
 *.o
+
+# compiled wired binaries
+wired/run/wired
+wired/run/wired_arm64
+wired/run/wired_universal
+
+# runtime data
+wired/database.sqlite3
+wired/run/etc/
+
+# signing/release/setup scripts (contain credentials or personal config)
+sign-and-notarize.sh
+release.sh
+github-ssh-setup.sh
+ExportOptions.plist
