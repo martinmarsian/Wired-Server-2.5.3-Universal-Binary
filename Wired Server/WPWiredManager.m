@@ -161,23 +161,28 @@
 		}
 	}
 
-	// Request execute rights.
-	// • If the credential is still cached in the Security Server session (300 s),
-	//   this succeeds silently and resets the timer — no dialog is shown.
-	// • Otherwise the dialog appears. On macOS 14+ with Touch ID hardware, the
-	//   system.privilege.admin right natively offers Touch ID in this dialog.
-	// kAuthorizationFlagExtendRights resets the 300-second timeout on each
-	// successful call, so any use within 5 minutes of the last one is prompt-free.
 	AuthorizationItem right = { kAuthorizationRightExecute, 0, NULL, 0 };
 	AuthorizationRights rights = { 1, &right };
-	AuthorizationFlags flags = kAuthorizationFlagDefaults
-							 | kAuthorizationFlagInteractionAllowed
-							 | kAuthorizationFlagPreAuthorize
-							 | kAuthorizationFlagExtendRights;
 
-	status = AuthorizationCopyRights(_authRef, &rights, NULL, flags, NULL);
+	// Fast path: if the admin credential is already cached in the Security Server
+	// session (within the 300-second window), obtain it silently — no dialog shown.
+	// kAuthorizationFlagPreAuthorize re-embeds the right as an external form in
+	// _authRef so that the subsequent AuthorizationExecuteWithPrivileges call does
+	// not show its own dialog (AEWP requires the right to be pre-authorized).
+	AuthorizationFlags silentFlags = kAuthorizationFlagDefaults
+	                               | kAuthorizationFlagPreAuthorize
+	                               | kAuthorizationFlagExtendRights;
+	if(AuthorizationCopyRights(_authRef, &rights, NULL, silentFlags, NULL) == errAuthorizationSuccess)
+		return YES;
+
+	// Credential not cached — show the standard Authorization Services dialog.
+	AuthorizationFlags interactiveFlags = kAuthorizationFlagDefaults
+									    | kAuthorizationFlagInteractionAllowed
+									    | kAuthorizationFlagPreAuthorize
+									    | kAuthorizationFlagExtendRights;
+
+	status = AuthorizationCopyRights(_authRef, &rights, NULL, interactiveFlags, NULL);
 	if(status != errAuthorizationSuccess) {
-		// Discard the ref on failure so the next call starts fresh.
 		AuthorizationFree(_authRef, kAuthorizationFlagDestroyRights);
 		_authRef = NULL;
 		// errAuthorizationCanceled: user dismissed the dialog — no error to display
@@ -331,6 +336,36 @@
 
 - (BOOL)isInstalled {
 	return [[NSFileManager defaultManager] isExecutableFileAtPath:WPWiredBinaryPath];
+}
+
+
+
+- (BOOL)hasUpdate {
+	NSFileManager	*fm = [NSFileManager defaultManager];
+	NSString		*resourcePath = [[self bundle] resourcePath];
+
+	// Each inner array: { bundled path, installed path }.
+	// rebuild-index.sh is deployed to /Library/Wired/ (needs to run via
+	// launchctl asuser outside the bundle).  start.sh/stop.sh are always
+	// executed directly from the bundle, so they have no installed copy to
+	// compare against and are implicitly up-to-date on every launch.
+	NSArray *pairs = @[
+		@[ [resourcePath stringByAppendingPathComponent:@"Wired/wired"],
+		   WPWiredBinaryPath ],
+		@[ [resourcePath stringByAppendingPathComponent:@"Wired/rebuild-index.sh"],
+		   @"/Library/Wired/rebuild-index.sh" ],
+	];
+
+	for(NSArray *pair in pairs) {
+		NSDate *bundledDate   = [[fm attributesOfItemAtPath:pair[0] error:NULL] fileModificationDate];
+		NSDate *installedDate = [[fm attributesOfItemAtPath:pair[1] error:NULL] fileModificationDate];
+
+		if(bundledDate && installedDate &&
+		   [bundledDate compare:installedDate] == NSOrderedDescending)
+			return YES;
+	}
+
+	return NO;
 }
 
 

@@ -419,6 +419,27 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
     
 }
 
+- (IBAction)update:(id)sender {
+	WPError		*error;
+	BOOL		wasRunning = [_wiredManager isRunning];
+
+	// Stop the running daemon so it releases its binary before we overwrite it.
+	if(wasRunning) {
+		if(![_wiredManager stopWithError:&error]) {
+			[[error alert] beginSheetModalForWindow:[_installButton window]];
+			return;
+		}
+	}
+
+	// Copy new binaries and re-apply permissions/ownership.
+	if([self _update] && wasRunning) {
+		// Restart with the newly installed binary.
+		if(![_wiredManager startWithError:&error])
+			[[error alert] beginSheetModalForWindow:[_installButton window]];
+	}
+}
+
+
 - (IBAction)releaseNotes:(id)sender {
 	NSString		*path;
 	
@@ -445,36 +466,65 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 #pragma mark -
 
 - (IBAction)start:(id)sender {
-	WPError		*error;
-	
 	[_startButton setEnabled:NO];
 	[_startProgressIndicator startAnimation:self];
-	
-	if(![_wiredManager startWithError:&error]) {
-		[[error alert] beginSheetModalForWindow:[_startButton window]];
-        
-		[_startButton setEnabled:YES];
-		[_startProgressIndicator stopAnimation:self];
-	}
+
+	// Safety net: stop the spinner after 15 s even if the server never reports as running
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)),
+				   dispatch_get_main_queue(), ^{
+		if(![_wiredManager isRunning]) {
+			[_startButton setEnabled:YES];
+			[_startProgressIndicator stopAnimation:self];
+		}
+	});
+
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		WPError *error = nil;
+		BOOL result = [_wiredManager startWithError:&error];
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if(!result) {
+				[[error alert] beginSheetModalForWindow:[_startButton window]];
+
+				[_startButton setEnabled:YES];
+				[_startProgressIndicator stopAnimation:self];
+			}
+			// On success the status timer detects wired.pid and calls wiredStatusDidChange:
+		});
+	});
 }
 
 
 
 - (IBAction)stop:(id)sender {
-	WPError		*error;
-	
 	[_startButton setEnabled:NO];
 	[_startProgressIndicator startAnimation:self];
-	
-	if(![_wiredManager stopWithError:&error]) {
-		[[error alert] beginSheetModalForWindow:[_startButton window]];
-		
-		[_startButton setEnabled:YES];
-		[_startProgressIndicator stopAnimation:self];
-	}
-    
-    [_hostTextField setEnabled:YES];
-    [self saveInfo];
+
+	// Safety net: stop the spinner after 10 s even if the server never reports as stopped
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)),
+				   dispatch_get_main_queue(), ^{
+		if([_wiredManager isRunning]) {
+			[_startButton setEnabled:YES];
+			[_startProgressIndicator stopAnimation:self];
+		}
+	});
+
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		WPError *error = nil;
+		BOOL result = [_wiredManager stopWithError:&error];
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if(!result) {
+				[[error alert] beginSheetModalForWindow:[_startButton window]];
+
+				[_startButton setEnabled:YES];
+				[_startProgressIndicator stopAnimation:self];
+			}
+			// On success the status timer detects wired.pid removal and calls wiredStatusDidChange:
+			[_hostTextField setEnabled:YES];
+			[self saveInfo];
+		});
+	});
 }
 
 - (IBAction)launchAutomatically:(id)sender {
@@ -893,8 +943,13 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	}
 	
 	if([_wiredManager isInstalled]) {
-		[_installButton setTitle:WPLS(@"Uninstall\u2026", @"Uninstall button title")];
-		[_installButton setAction:@selector(uninstall:)];
+		if([_wiredManager hasUpdate]) {
+			[_installButton setTitle:WPLS(@"Update", @"Update button title")];
+			[_installButton setAction:@selector(update:)];
+		} else {
+			[_installButton setTitle:WPLS(@"Uninstall\u2026", @"Uninstall button title")];
+			[_installButton setAction:@selector(uninstall:)];
+		}
 	} else {
 		[_installButton setTitle:WPLS(@"Install", @"Install button title")];
 		[_installButton setAction:@selector(install:)];
