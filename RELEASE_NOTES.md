@@ -163,13 +163,34 @@ On macOS 12 (Monterey), 13 (Ventura), and 14 (Sonoma), granting Full Disk Access
 
 **Recommendation:** Keep the files directory on the system volume, e.g. `/Library/Wired/data/files` (the default).
 
+#### Using the Configuration Profile on macOS 12–14 (Optional)
+
+For users on macOS 12 (Monterey), 13 (Ventura), or 14 (Sonoma) who need to serve files from an external drive, a configuration profile (`WiredServerTCC.mobileconfig`) is included inside the app bundle. It grants Full Disk Access to the Wired Server daemon automatically, without navigating System Settings manually.
+
+**Where to find it:**
+
+1. In Finder, locate **Wired Server.app** (e.g. in `/Applications`)
+2. Right-click → **Show Package Contents**
+3. Navigate to **`Contents/Resources/`**
+4. The file is named **`WiredServerTCC.mobileconfig`**
+
+**How to install it:**
+
+1. Double-click `WiredServerTCC.mobileconfig` — macOS will open System Settings automatically
+2. Go to **System Settings → Privacy & Security → Profiles**
+3. The profile **"Wired Server – Privacy Policy"** appears under *Downloaded Profiles* — click **Install…**
+4. Enter your administrator password to confirm
+5. Click **Stop**, then **Start** in Wired Server to apply the new permissions
+
+The profile can be removed at any time via **System Settings → Privacy & Security → Profiles**.
+
 ---
 
 #### Configuration Profiles (mobileconfig) No Longer Work (macOS 15 and later)
 
 Installing a `.mobileconfig` profile to grant TCC permissions to the Wired server binary **no longer works on macOS 15 (Sequoia) and later**, including macOS 26 (Tahoe). Apple now requires supervised MDM enrollment (Apple Business Manager / Apple School Manager) for TCC configuration profiles to take effect. Manually installed profiles are silently ignored for TCC purposes.
 
-On macOS 12–14, manually installed `.mobileconfig` profiles may still work for granting TCC permissions.
+On macOS 12–14, manually installed `.mobileconfig` profiles may still work for granting TCC permissions (see above).
 
 ---
 
