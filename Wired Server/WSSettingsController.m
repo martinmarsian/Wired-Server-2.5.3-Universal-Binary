@@ -216,11 +216,6 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	[self _updateSettings];
 	[self _updatePortStatus];
     
-    // Sparkle setup
-    if([[WPSettings settings] boolForKey:@"SUEnableAutomaticChecks"]) {
-        [_updater resetUpdateCycle];
-        [_updater checkForUpdatesInBackground];
-    }
 	
 	[_logManager startReadingFromLog];
 }
