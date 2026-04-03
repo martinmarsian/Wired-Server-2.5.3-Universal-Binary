@@ -38,5 +38,23 @@
 yJAbaSrB/4lZGOfqOpa39z7v2I4Gex0="/>
     </item>
 
+
+    <item>
+      <title>Wired Server 2.5.4</title>
+      <pubDate>Fr., 03 Apr. 2026 16:43:10 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary/releases/tag/v2.5.4
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary/releases/download/v2.5.4/WiredServer-2.5.4.dmg"
+        sparkle:version="20"
+        sparkle:shortVersionString="2.5.4"
+        type="application/octet-stream"
+        length="9265924"
+        sparkle:dsaSignature="MEUCIEQ5HM3IqM3+epJtdFdlhgDSaq2Bl6S0mwqOBH7KohyhAiEAh3j87MYA5ZEM
+j+uNYaG67x5I6dAwmXl3mkkIIdHv/JM="/>
+    </item>
+
   </channel>
 </rss>
