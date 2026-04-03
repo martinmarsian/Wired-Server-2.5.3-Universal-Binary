@@ -1,5 +1,63 @@
 # Wired Server — Release Notes
 
+## Version 2.5.4
+
+### What's New
+
+---
+
+### Automatic Updates via Sparkle
+
+Wired Server now checks for updates automatically at launch and notifies you when a new version is available. Updates can be installed directly from within the app — no manual download required.
+
+- Update checks use a signed `appcast.xml` feed hosted on GitHub
+- All releases are signed with a DSA key, verified by Sparkle before installing
+- Automatic background checks can be configured in the app preferences
+
+---
+
+### Distributed as Notarized DMG
+
+Starting with this release, Wired Server is distributed as a **signed and notarized DMG** image. The app is:
+
+- Code-signed with a **Developer ID Application** certificate
+- Notarized by Apple — Gatekeeper will not block the app on any supported macOS version
+- Stapled — the notarization ticket is embedded in the DMG, so it works offline
+
+---
+
+### Rebuild Index Reliability
+
+The **Rebuild Index** function now runs with the correct user session context, ensuring that file system access (TCC permissions) is honoured correctly on macOS 13 and later. The index rebuild is launched via `launchctl asuser` so it inherits the installing user's Full Disk Access grants rather than running in the restricted system context.
+
+---
+
+### Script Hardening
+
+Install, Update, Start, and Stop scripts have received several reliability and security improvements:
+
+- `CONF_USER` and `CONF_GROUP` values read from `wired.conf` are now sanitised before being passed to `dscl` and `chown`, preventing injection of unexpected arguments
+- The recursive `chown` on the files directory is skipped if the path resolves outside `/Library/Wired/data/` (e.g. an external volume), avoiding unintended permission changes
+- The Update button correctly detects whether a newer binary is available and performs a clean stop → update → restart cycle
+
+---
+
+### System Requirements
+
+| | |
+|---|---|
+| **macOS** | 12 Monterey or later |
+| **Architecture** | Universal (Apple Silicon + Intel) |
+| **Privileges** | Administrator password required for Install / Start / Stop |
+
+---
+
+### Upgrading from 2.5.3
+
+No migration is required. Open the app and click **Start** — the service will continue running with your existing configuration.
+
+---
+
 ## Version 2.5.3
 
 ### What's New
