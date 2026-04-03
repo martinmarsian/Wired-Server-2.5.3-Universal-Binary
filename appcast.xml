@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Wired Server</title>
+    <link>https://github.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary</link>
+    <description>Wired Server Updates</description>
+    <language>en</language>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         HOW TO ADD A NEW RELEASE
+         ════════════════════════════════════════════════════════════════════
+         1. Build a Release Archive in Xcode (Product → Archive)
+         2. Export the app and create a DMG (e.g. WiredServer-X.Y.Z.dmg)
+         3. Upload the DMG as a GitHub Release asset
+         4. Sign the DMG:
+              Pods/Sparkle/bin/sign_update WiredServer-X.Y.Z.dmg dsa_priv.pem
+            → copy the printed Base64 string as sparkle:dsaSignature
+         5. Get the file size in bytes:
+              wc -c < WiredServer-X.Y.Z.dmg
+         6. Add a new <item> block below (copy the template from the existing one)
+         7. Commit and push — Sparkle picks up the update automatically
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <item>
+      <title>Wired Server 2.5.3</title>
+      <pubDate>Thu, 03 Apr 2026 00:00:00 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary/releases/tag/v2.5.3
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary/releases/download/v2.5.3/WiredServer.dmg"
+        sparkle:version="20"
+        sparkle:shortVersionString="2.5.3"
+        type="application/octet-stream"
+        length="REPLACE_WITH_DMG_BYTE_SIZE"
+        sparkle:dsaSignature="REPLACE_WITH_BASE64_SIGNATURE"/>
+    </item>
+
+  </channel>
+</rss>

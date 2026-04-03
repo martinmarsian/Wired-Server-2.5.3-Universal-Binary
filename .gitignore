@@ -244,3 +244,8 @@ sign-and-notarize.sh
 release.sh
 github-ssh-setup.sh
 ExportOptions.plist
+
+# Sparkle DSA private key — never commit this!
+dsa_priv.pem
+dsaparam.pem
+dsa_pub.pem.bak
