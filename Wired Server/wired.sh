@@ -151,6 +151,19 @@ lipo -create "/tmp/wired_arm64_$$" "/tmp/wired_x86_64_$$" \
 chmod 755 "$WIRED_BINARY"
 echo "=== Result: $(lipo -info "$WIRED_BINARY") ==="
 
+# Copy all architecture-independent bundle resources from the install prefix.
+# install.sh and update.sh expect wiredctl, wired.xml, banner.png,
+# etc/wired.conf, and files/ to be present alongside the wired binary.
+# This must happen before rm -rf "$BLDBASE" removes $INSTALL_PREFIX.
+mkdir -p "$BUILT_PRODUCTS_DIR/Wired/etc"
+cp "$INSTALL_PREFIX/Wired/wiredctl"       "$BUILT_PRODUCTS_DIR/Wired/wiredctl"       || { echo "ERROR: copy wiredctl failed"; exit 1; }
+cp "$INSTALL_PREFIX/Wired/wired.xml"      "$BUILT_PRODUCTS_DIR/Wired/wired.xml"      || { echo "ERROR: copy wired.xml failed"; exit 1; }
+cp "$INSTALL_PREFIX/Wired/banner.png"     "$BUILT_PRODUCTS_DIR/Wired/banner.png"     || { echo "ERROR: copy banner.png failed"; exit 1; }
+cp "$INSTALL_PREFIX/Wired/etc/wired.conf" "$BUILT_PRODUCTS_DIR/Wired/etc/wired.conf" || { echo "ERROR: copy wired.conf failed"; exit 1; }
+rm -rf "$BUILT_PRODUCTS_DIR/Wired/files"
+cp -r  "$INSTALL_PREFIX/Wired/files"      "$BUILT_PRODUCTS_DIR/Wired/files"          || { echo "ERROR: copy files failed"; exit 1; }
+chmod 755 "$BUILT_PRODUCTS_DIR/Wired/wiredctl"
+
 rm -f "/tmp/wired_arm64_$$" "/tmp/wired_x86_64_$$"
 rm -rf "$BLDBASE"
 
