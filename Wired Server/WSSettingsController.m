@@ -235,25 +235,30 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 
 - (void)awakeFromNib {
     // Set the minimum content size (General view) so controls are never clipped
-	[self.window setContentSize:[self.generalPreferenceView frame].size];
+    // The Logs tab is the largest content view (681×313).
+    // Use it as the minimum window size so all tabs always have enough room.
+    NSSize minContent = NSMakeSize(681.0, 313.0);
+    NSSize minFrame   = [self.window frameRectForContentRect:
+                            NSMakeRect(0, 0, minContent.width, minContent.height)].size;
+    [self.window setMinSize:minFrame];
+
 	[[self.window contentView] addSubview:self.generalPreferenceView];
 	[self.toolbar setSelectedItemIdentifier:@"General"];
 
-    // Restore the saved frame (position + size).
-    // setContentSize: above gives us the minimum acceptable frame; accept the
-    // saved frame only if it is at least that large, then keep the top-left
-    // corner the user chose.
+    // Restore the saved frame (position + size); clamp to the minimum so no
+    // controls are ever clipped.
     NSString *savedFrameStr = [[NSUserDefaults standardUserDefaults] stringForKey:@"WSWindowFrame"];
     if (savedFrameStr.length > 0) {
-        NSRect saved   = NSRectFromString(savedFrameStr);
-        NSRect minimum = self.window.frame;
+        NSRect saved = NSRectFromString(savedFrameStr);
         NSRect restored;
-        restored.size.width  = MAX(saved.size.width,  minimum.size.width);
-        restored.size.height = MAX(saved.size.height, minimum.size.height);
-        // Keep the top-left corner from the saved position
-        restored.origin.x = saved.origin.x;
-        restored.origin.y = NSMaxY(saved) - restored.size.height;
+        restored.size.width  = MAX(saved.size.width,  minFrame.width);
+        restored.size.height = MAX(saved.size.height, minFrame.height);
+        restored.origin.x    = saved.origin.x;
+        restored.origin.y    = NSMaxY(saved) - restored.size.height;
         [self.window setFrame:restored display:NO];
+    } else {
+        // First launch: open at the minimum (Logs) size
+        [self.window setContentSize:minContent];
     }
 
     _wiredManager	= [[WPWiredManager alloc] init];
@@ -395,26 +400,23 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 #pragma mark IBAction Methods
 
 - (IBAction)switchView:(id)sender {
-	
+
 	NSInteger tag = [sender tag];
-	
+
 	NSView *view = [self _viewForTag:tag];
 	NSView *previousView = [self _viewForTag:self.currentViewTag];
 	self.currentViewTag = tag;
-	NSRect newFrame = [self _newFrameForNewContentView:view];
-	
+
 	[NSAnimationContext beginGrouping];
 	[[NSAnimationContext currentContext] setDuration:0.1];
-	
+
 	if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
 	    [[NSAnimationContext currentContext] setDuration:1.0];
-	
+
 	[[[self.window contentView] animator] replaceSubview:previousView with:view];
-	[[self.window animator] setFrame:newFrame display:YES];
-	
+
 	[NSAnimationContext endGrouping];
-	
-    
+
 	if(tag == 1 && self.portCheckerStatus == WPPortCheckerUnknown)
 		[self checkPortAgain:self];
 
