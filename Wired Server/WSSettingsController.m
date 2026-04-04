@@ -455,7 +455,9 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 }
 
 - (IBAction)automaticallyCheckForUpdate:(id)sender {
-    //[_updater resetUpdateCycle];
+    BOOL enabled = ([sender state] == NSControlStateValueOn);
+    [[WPSettings settings] setBool:enabled forKey:@"SUEnableAutomaticChecks"];
+    [_updater setAutomaticallyChecksForUpdates:enabled];
 }
 
 
@@ -1001,6 +1003,7 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	}
 	
 	[_launchAutomaticallyButton setState:[_wiredManager launchesAutomatically]];
+    [_automaticallyCheckForUpdate setState:([[WPSettings settings] boolForKey:@"SUEnableAutomaticChecks"] ? NSControlStateValueOn : NSControlStateValueOff)];
 }
 
 - (void)_updateSettings {
