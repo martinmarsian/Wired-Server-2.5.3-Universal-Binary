@@ -224,8 +224,7 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	[self.window setContentSize:[self.generalPreferenceView frame].size];
 	[[self.window contentView] addSubview:self.generalPreferenceView];
 	[self.toolbar setSelectedItemIdentifier:@"General"];
-	[self.window center];
-	    
+
     _wiredManager	= [[WPWiredManager alloc] init];
 	_accountManager	= [[WPAccountManager alloc] initWithDatabasePath:[_wiredManager pathForFile:@"database.sqlite3"]];
 	_configManager	= [[WPConfigManager alloc] initWithConfigPath:[_wiredManager pathForFile:@"etc/wired.conf"]];
