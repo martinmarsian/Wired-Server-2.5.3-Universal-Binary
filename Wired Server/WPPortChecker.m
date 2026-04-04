@@ -27,12 +27,6 @@
  */
 
 #import "WPPortChecker.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 
 @implementation WPPortChecker
 
@@ -48,84 +42,86 @@
 
 #pragma mark -
 
-// Performs a non-blocking TCP connect to 127.0.0.1:port with a 5-second
-// timeout. Returns Open if wired is listening, Closed if the port is not
-// in use, Filtered on timeout, or Failed on any socket error.
-- (WPPortCheckerStatus)_checkPort:(NSUInteger)port {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-        return WPPortCheckerFailed;
+// Parse the nmap-style text returned by api.hackertarget.com/nmap/:
+//   "4871/tcp  open   unknown"  → Open
+//   "4871/tcp  closed unknown"  → Closed
+//   "4871/tcp  filtered  ..."   → Filtered
+// Any other response (error text, rate-limit message, …) → Failed.
+- (WPPortCheckerStatus)_statusFromNmapOutput:(NSString *)output port:(NSUInteger)port {
+    NSString *portPrefix = [NSString stringWithFormat:@"%lu/tcp", (unsigned long)port];
 
-    // Switch to non-blocking so connect() returns immediately
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags < 0 || fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
-        close(sockfd);
-        return WPPortCheckerFailed;
+    for (NSString *line in [output componentsSeparatedByString:@"\n"]) {
+        if ([line hasPrefix:portPrefix]) {
+            if ([line rangeOfString:@" open "].location  != NSNotFound ||
+                [line rangeOfString:@"\topen"].location != NSNotFound ||
+                [line hasSuffix:@" open"])
+                return WPPortCheckerOpen;
+
+            if ([line rangeOfString:@" closed"].location != NSNotFound)
+                return WPPortCheckerClosed;
+
+            if ([line rangeOfString:@" filtered"].location != NSNotFound)
+                return WPPortCheckerFiltered;
+        }
     }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family      = AF_INET;
-    addr.sin_port        = htons((uint16_t)port);
-    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);   // 127.0.0.1
-
-    int result = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
-
-    if (result == 0) {
-        // Immediate success (possible on loopback)
-        close(sockfd);
-        return WPPortCheckerOpen;
-    }
-    if (errno == ECONNREFUSED) {
-        close(sockfd);
-        return WPPortCheckerClosed;
-    }
-    if (errno != EINPROGRESS) {
-        close(sockfd);
-        return WPPortCheckerFailed;
-    }
-
-    // Wait up to 5 seconds for the connection to complete
-    fd_set writeSet;
-    FD_ZERO(&writeSet);
-    FD_SET(sockfd, &writeSet);
-    struct timeval tv = { .tv_sec = 5, .tv_usec = 0 };
-
-    result = select(sockfd + 1, NULL, &writeSet, NULL, &tv);
-
-    if (result == 0) {          // Timeout
-        close(sockfd);
-        return WPPortCheckerFiltered;
-    }
-    if (result < 0) {
-        close(sockfd);
-        return WPPortCheckerFailed;
-    }
-
-    // select() returned ready — check whether connect() succeeded
-    int soError = 0;
-    socklen_t soErrorLen = sizeof(soError);
-    getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &soError, &soErrorLen);
-    close(sockfd);
-
-    if (soError == 0)             return WPPortCheckerOpen;
-    if (soError == ECONNREFUSED)  return WPPortCheckerClosed;
-    return WPPortCheckerFiltered;
+    return WPPortCheckerFailed;
 }
 
+// Two-step internet reachability check:
+//   1. Resolve the machine's public IP via api.ipify.org
+//   2. Ask api.hackertarget.com to run a one-port nmap scan against that IP
+//
+// This mirrors what the original wired.read-write.fr/port_check.php did
+// (auto-detect caller's IP, probe the port from outside) without depending
+// on the defunct server.
 - (void)checkStatusForPort:(NSUInteger)port {
     _port = port;
+    id<NSObject> retainedDelegate = (id<NSObject>)delegate;
 
-    // Run the blocking socket check on a background queue and
-    // deliver the result on the main queue
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        WPPortCheckerStatus status = [self _checkPort:port];
+    NSURL *ipURL = [NSURL URLWithString:@"https://api.ipify.org?format=plain"];
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([delegate respondsToSelector:@selector(portChecker:didReceiveStatus:forPort:)])
-                [delegate portChecker:self didReceiveStatus:status forPort:port];
-        });
-    });
+    [[[NSURLSession sharedSession]
+        dataTaskWithURL:ipURL
+        completionHandler:^(NSData *ipData, NSURLResponse *ipResp, NSError *ipErr) {
+
+        void (^report)(WPPortCheckerStatus) = ^(WPPortCheckerStatus s) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([retainedDelegate respondsToSelector:
+                        @selector(portChecker:didReceiveStatus:forPort:)])
+                    [(id)retainedDelegate portChecker:self
+                                    didReceiveStatus:s
+                                             forPort:port];
+            });
+        };
+
+        if (ipErr || !ipData) { report(WPPortCheckerFailed); return; }
+
+        NSString *publicIP = [[[NSString alloc] initWithData:ipData
+            encoding:NSUTF8StringEncoding] autorelease];
+        publicIP = [publicIP stringByTrimmingCharactersInSet:
+            [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+        if (!publicIP.length) { report(WPPortCheckerFailed); return; }
+
+        // Step 2 — nmap single-port scan from hackertarget
+        NSString *urlStr = [NSString stringWithFormat:
+            @"https://api.hackertarget.com/nmap/?q=%@:%lu",
+            publicIP, (unsigned long)port];
+        NSURL *nmapURL = [NSURL URLWithString:urlStr];
+
+        [[[NSURLSession sharedSession]
+            dataTaskWithURL:nmapURL
+            completionHandler:^(NSData *nmapData, NSURLResponse *nmapResp, NSError *nmapErr) {
+
+            if (nmapErr || !nmapData) { report(WPPortCheckerFailed); return; }
+
+            NSString *output = [[[NSString alloc] initWithData:nmapData
+                encoding:NSUTF8StringEncoding] autorelease];
+            report([self _statusFromNmapOutput:output port:port]);
+
+        }] resume];
+
+    }] resume];
 }
 
 @end
