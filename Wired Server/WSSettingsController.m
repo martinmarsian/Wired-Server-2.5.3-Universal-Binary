@@ -220,10 +220,24 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	[_logManager startReadingFromLog];
 }
 
+- (void)windowDidMove:(NSNotification *)notification {
+    // Save the top-left corner so awakeFromNib can restore it after setContentSize:
+    NSPoint topLeft = NSMakePoint(NSMinX(self.window.frame), NSMaxY(self.window.frame));
+    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromPoint(topLeft)
+                                             forKey:@"WSWindowTopLeft"];
+}
+
 - (void)awakeFromNib {
 	[self.window setContentSize:[self.generalPreferenceView frame].size];
 	[[self.window contentView] addSubview:self.generalPreferenceView];
 	[self.toolbar setSelectedItemIdentifier:@"General"];
+
+    // Restore the saved top-left corner (setContentSize: may shift origin.y,
+    // so we re-apply the position the user last chose)
+    NSString *savedTopLeft = [[NSUserDefaults standardUserDefaults] stringForKey:@"WSWindowTopLeft"];
+    if (savedTopLeft.length > 0) {
+        [self.window setFrameTopLeftPoint:NSPointFromString(savedTopLeft)];
+    }
 
     _wiredManager	= [[WPWiredManager alloc] init];
 	_accountManager	= [[WPAccountManager alloc] initWithDatabasePath:[_wiredManager pathForFile:@"database.sqlite3"]];
