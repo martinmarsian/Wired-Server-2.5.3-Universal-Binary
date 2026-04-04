@@ -55,7 +55,7 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Wired Server" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="Wired Server" animationBehavior="default" id="991">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="480" height="270"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
@@ -95,6 +95,12 @@
                             <action selector="switchView:" target="-2" id="1543"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="B1C2D3E4-F5A6-7890-ABCD-EF1234567890" explicitItemIdentifier="Updates" label="Updates" paletteLabel="Updates" tag="5" image="Updates" selectable="YES" id="1991">
+                        <nil key="toolTip"/>
+                        <connections>
+                            <action selector="switchView:" target="-2" id="1992"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="999"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="1000"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="997"/>
@@ -106,6 +112,7 @@
                     <toolbarItem reference="1969"/>
                     <toolbarItem reference="1759"/>
                     <toolbarItem reference="1542"/>
+                    <toolbarItem reference="1991"/>
                     <toolbarItem reference="1000"/>
                 </defaultToolbarItems>
                 <connections>
