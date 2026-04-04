@@ -65,8 +65,8 @@ On macOS 12–14, manually installed `.mobileconfig` profiles may still work for
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/joergmaertin/Wired-Server-2.5.3-Universal-Binary.git
-   cd Wired-Server-2.5.3-Universal-Binary
+   git clone https://github.com/martinmarsian/wired-server-universal-binary.git
+   cd wired-server-universal-binary
    ```
 
 2. Install CocoaPods dependencies:

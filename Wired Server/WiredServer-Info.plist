@@ -33,7 +33,7 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/martinmarsian/Wired-Server-2.5.3-Universal-Binary/master/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/martinmarsian/wired-server-universal-binary/master/appcast.xml</string>
 	<key>SUPublicDSAKeyFile</key>
 	<string>dsa_pub.pem</string>
 </dict>
