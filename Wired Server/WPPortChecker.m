@@ -67,13 +67,10 @@
     return WPPortCheckerFailed;
 }
 
-// Two-step internet reachability check:
+// Three-step internet reachability check:
 //   1. Resolve the machine's public IP via api.ipify.org
-//   2. Ask api.hackertarget.com to run a one-port nmap scan against that IP
-//
-// This mirrors what the original wired.read-write.fr/port_check.php did
-// (auto-detect caller's IP, probe the port from outside) without depending
-// on the defunct server.
+//   2. Ask portchecker.co to probe the port (primary — JSON API, reliable)
+//   3. Fall back to api.hackertarget.com nmap scan if portchecker.co fails
 - (void)checkStatusForPort:(NSUInteger)port {
     _port = port;
     id<NSObject> retainedDelegate = (id<NSObject>)delegate;
@@ -103,21 +100,54 @@
 
         if (!publicIP.length) { report(WPPortCheckerFailed); return; }
 
-        // Step 2 — nmap single-port scan from hackertarget
-        NSString *urlStr = [NSString stringWithFormat:
-            @"https://api.hackertarget.com/nmap/?q=%@:%lu",
+        // Step 2 — portchecker.co JSON API (primary)
+        NSMutableURLRequest *pcReq = [NSMutableURLRequest
+            requestWithURL:[NSURL URLWithString:@"https://portchecker.co/api/v1/query"]
+               cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+           timeoutInterval:30.0];
+        [pcReq setHTTPMethod:@"POST"];
+        [pcReq setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        [pcReq setValue:@"WiredServer/1.0" forHTTPHeaderField:@"User-Agent"];
+
+        NSString *pcBody = [NSString stringWithFormat:@"{\"host\":\"%@\",\"ports\":[%lu]}",
             publicIP, (unsigned long)port];
-        NSURL *nmapURL = [NSURL URLWithString:urlStr];
+        [pcReq setHTTPBody:[pcBody dataUsingEncoding:NSUTF8StringEncoding]];
 
-        [[[NSURLSession sharedSession]
-            dataTaskWithURL:nmapURL
-            completionHandler:^(NSData *nmapData, NSURLResponse *nmapResp, NSError *nmapErr) {
+        [[[NSURLSession sharedSession] dataTaskWithRequest:pcReq
+            completionHandler:^(NSData *pcData, NSURLResponse *pcResp, NSError *pcErr) {
 
-            if (nmapErr || !nmapData) { report(WPPortCheckerFailed); return; }
+            if (!pcErr && pcData) {
+                NSError *jsonErr = nil;
+                id json = [NSJSONSerialization JSONObjectWithData:pcData
+                    options:0 error:&jsonErr];
+                if (!jsonErr && [json isKindOfClass:[NSDictionary class]]) {
+                    NSArray *ports = [(NSDictionary *)json objectForKey:@"ports"];
+                    if ([ports isKindOfClass:[NSArray class]] && [ports count] > 0) {
+                        NSDictionary *portInfo = [ports objectAtIndex:0];
+                        NSString *status = [portInfo objectForKey:@"status"];
+                        if ([status isEqualToString:@"open"]) {
+                            report(WPPortCheckerOpen); return;
+                        }
+                        if ([status isEqualToString:@"closed"] ||
+                            [status isEqualToString:@"filtered"]) {
+                            report(WPPortCheckerClosed); return;
+                        }
+                    }
+                }
+            }
 
-            NSString *output = [[[NSString alloc] initWithData:nmapData
-                encoding:NSUTF8StringEncoding] autorelease];
-            report([self _statusFromNmapOutput:output port:port]);
+            // Step 3 — hackertarget.com nmap scan (fallback)
+            NSString *htURLStr = [NSString stringWithFormat:
+                @"https://api.hackertarget.com/nmap/?q=%@:%lu",
+                publicIP, (unsigned long)port];
+            [[[NSURLSession sharedSession]
+                dataTaskWithURL:[NSURL URLWithString:htURLStr]
+                completionHandler:^(NSData *nd, NSURLResponse *nr, NSError *ne) {
+                if (ne || !nd) { report(WPPortCheckerFailed); return; }
+                NSString *output = [[[NSString alloc] initWithData:nd
+                    encoding:NSUTF8StringEncoding] autorelease];
+                report([self _statusFromNmapOutput:output port:port]);
+            }] resume];
 
         }] resume];
 
