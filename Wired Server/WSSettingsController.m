@@ -262,6 +262,16 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
     // Always set the canonical feed URL from Info.plist to overwrite any stale URL cached in UserDefaults
     [_updater setFeedURL:[NSURL URLWithString:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"SUFeedURL"]]];
 
+    // Sparkle's scheduled interval (default 24h) suppresses the auto-check if a manual
+    // check was done recently. Trigger an explicit background check on every launch so the
+    // user always gets notified about updates immediately, regardless of when they last checked.
+    if ([[WPSettings settings] boolForKey:@"SUEnableAutomaticChecks"]) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            [_updater checkForUpdatesInBackground];
+        });
+    }
+
 
 	_greenDropImage	= [[NSImage alloc] initWithContentsOfFile:[[self bundle] pathForResource:@"GreenDrop" ofType:@"tiff"]];
 	
