@@ -61,24 +61,30 @@
 
 void wi_switch_user(uid_t uid, gid_t gid) {
 	struct passwd	*user;
-	
+
+	/* Only root can change ownership and drop privileges.
+	 * When running as a non-root user (e.g. LaunchAgent mode), skip
+	 * gracefully — the process is already running as the correct user. */
+	if(geteuid() != 0)
+		return;
+
 	if(wi_log_path) {
 		if(chown(wi_string_cstring(wi_log_path), uid, gid) < 0) {
 			wi_log_error(WI_STR("Could not change owner of %@: %s"),
 				wi_log_path, strerror(errno));
 		}
 	}
-	
+
 	if(gid != getegid()) {
 		user = getpwuid(uid);
-		
+
 		if(user) {
 			if(initgroups(user->pw_name, gid) < 0) {
 				wi_log_error(WI_STR("Could not set group privileges: %s"),
 					strerror(errno));
 			}
 		}
-			
+
 		if(setgid(gid) < 0) {
 			wi_log_error(WI_STR("Could not drop group privileges: %s"),
 				strerror(errno));

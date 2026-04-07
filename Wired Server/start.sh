@@ -65,6 +65,13 @@ if ! dscl . -read "/Users/${CONF_USER}" >/dev/null 2>&1; then
     dscl . -create "/Users/${CONF_USER}" IsHidden 1
 fi
 
+# ── Disable BEFORE any file writes ───────────────────────────────────────────
+# On macOS 26, launchd's FSEvents handler for /Library/LaunchDaemons/ fires the
+# moment the plist is written.  If the service is still ENABLED at that point,
+# launchd auto-restarts wired — racing with our kill/bootout sequence below.
+# Disabling first suppresses that FSEvents-triggered restart.
+/bin/launchctl disable "system/${LABEL}" 2>/dev/null || true
+
 # ── Re-apply ownership on start ───────────────────────────────────────────────
 if [ -f "$DATA/etc/wired.conf" ]; then
     chown "${CONF_USER}:${CONF_GROUP}" "/Library/Wired" 2>/dev/null || true
@@ -136,25 +143,100 @@ EOF
     chmod 644 "$PLIST"
 fi
 
-# ── Stop old LaunchAgent if still running (migration from gui domain) ─────────
+# ── Stop old LaunchAgent if still running (switching from agent → daemon) ─────
 if [ -n "$INSTALL_UID" ]; then
+    /bin/launchctl disable "gui/${INSTALL_UID}/${LABEL}" 2>/dev/null || true
     /bin/launchctl bootout "gui/${INSTALL_UID}/${LABEL}" 2>/dev/null || true
 fi
-rm -f "/Library/LaunchAgents/${LABEL}.plist" 2>/dev/null || true
+rm -f "/Users/${INSTALL_USER}/Library/LaunchAgents/${LABEL}.plist" 2>/dev/null || true
+# Send SIGTERM; wait up to 10 s for graceful exit (pgrep catches any
+# KeepAlive-respawned instance too).  Fall back to SIGKILL so the port is
+# guaranteed free even when SSL_shutdown is slow (observed: up to 65 s with
+# connected clients).
+killall wired 2>/dev/null || true
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+    pgrep -x wired >/dev/null 2>&1 || break
+    sleep 1
+done
+if pgrep -x wired >/dev/null 2>&1; then
+    killall -KILL wired 2>/dev/null || true
+fi
 
-# 1. Enable the daemon so Disabled=false takes effect.
-/bin/launchctl enable "system/${LABEL}" 2>&1
-
-# 2. Bootout if currently registered so the updated plist takes effect.
+# 1. Bootout if still registered (belt+suspenders after disable+kill above).
 if /bin/launchctl print "system/${LABEL}" >/dev/null 2>&1; then
     /bin/launchctl bootout "system/${LABEL}" 2>&1 || true
 fi
 
-# 3. Bootstrap the daemon into the system domain.
-/bin/launchctl bootstrap system "${PLIST}" 2>&1 || exit 1
+# 1b. Wait for wired to fully exit (SIGKILL if still alive after 10 s).
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+    pgrep -x wired >/dev/null 2>&1 || break
+    sleep 1
+done
+if pgrep -x wired >/dev/null 2>&1; then
+    killall -KILL wired 2>/dev/null || true
+fi
+# ── Wait until the wired port is actually bindable ────────────────────────────
+# macOS 26 holds kernel TCP socket state for a variable time (up to ~35 s)
+# after process exit, invisible to lsof.  Probe with SO_REUSEADDR bind() so
+# we wait exactly as long as needed and no longer.
+_wport=$(grep -m1 '^port ' "${DATA}/etc/wired.conf" 2>/dev/null \
+    | sed -E 's/^port[[:space:]]*=[[:space:]]*//' | tr -d '[:space:]')
+[ -z "$_wport" ] && _wport=4871
+for _pw in $(seq 1 40); do
+    python3 -c "
+import socket, sys
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+try:
+    s.bind(('', int(sys.argv[1])))
+    s.close()
+    sys.exit(0)
+except OSError:
+    pass
+s.close()
+sys.exit(1)" "$_wport" 2>/dev/null && break
+    sleep 1
+done
 
-# 4. Kickstart; -k kills any existing instance first.
-/bin/launchctl kickstart -k "system/${LABEL}" 2>&1 || exit 1
+# 2. Enable after bootout: service is now unregistered.  Must come before
+#    bootstrap so launchd doesn't reject the bootstrap of a disabled service.
+#    On macOS 26, enable can trigger launchd to auto-start wired asynchronously
+#    (FSEvents on /Library/LaunchDaemons/).  We wait up to 2 s for that to
+#    happen; if the service self-registers we skip the explicit bootstrap
+#    entirely, avoiding an "already loaded" conflict.
+# 3. Remove stale pid BEFORE enable so auto-started wired writes a fresh pid.
+rm -f "${DATA}/wired.pid" 2>/dev/null || true
+
+# 4. Enable after bootout (must come before bootstrap so launchd accepts it).
+#    On macOS 26, enable can trigger launchd to auto-start wired asynchronously
+#    via FSEvents on /Library/LaunchDaemons/.  Poll for up to 3 s so we catch
+#    fast auto-starts early and only fall back to explicit bootstrap when launchd
+#    definitely won't self-register — avoids the EADDRINUSE race between an
+#    auto-start and an explicit bootstrap call.
+/bin/launchctl enable "system/${LABEL}" 2>&1 || true
+
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+    /bin/launchctl print "system/${LABEL}" >/dev/null 2>&1 && break
+    sleep 1
+done
+
+# 5. Bootstrap only if launchd did not self-register within the poll window.
+if ! /bin/launchctl print "system/${LABEL}" >/dev/null 2>&1; then
+    # bootstrap may fail with "already loaded" if FSEvents auto-started wired
+    # between our poll and this call; in that case the service IS registered,
+    # so re-check before treating it as a real error.
+    /bin/launchctl bootstrap system "${PLIST}" 2>&1 || \
+        /bin/launchctl print "system/${LABEL}" >/dev/null 2>&1 || exit 1
+fi
+
+# 5. Wait until wired has written its pid file, which it does only AFTER
+#    wd_server_listen() succeeds (i.e. after bind + listen).  This gives
+#    the caller a reliable signal that the server is actually accepting
+#    connections before we return WIREDSERVER_SCRIPT_OK.
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+    [ -f "${DATA}/wired.pid" ] && break
+    sleep 1
+done
 
 # ── Pre-build the file index in the logged-in user's TCC session ─────────────
 # The LaunchDaemon runs in the system context where TCC may deny opendir() on

@@ -327,10 +327,31 @@ void wd_server_apply_settings(wi_set_t *changes) {
 
 
 void wd_server_cleanup(void) {
-	
+
 	if(wi_config_bool_for_name(wd_config, WI_STR("map port"))) {
 		wd_portmap_unmap_natpmp();
 		wd_portmap_unmap_upnp();
+	}
+}
+
+
+
+/* Close the listen sockets immediately so the port is released before
+   wd_users_remove_all_users() runs its (potentially 60 s+) SSL shutdown.
+   The listen/receive threads are blocked in select() on these fds; closing
+   the fds causes select() to return EBADF, the threads log the error and
+   loop back to check wd_running (which is already false), then exit. */
+void wd_server_close_listen_sockets(void) {
+	wi_uinteger_t	i;
+
+	if(wd_tcp_sockets) {
+		for(i = 0; i < wi_array_count(wd_tcp_sockets); i++)
+			wi_socket_close(wi_array_data_at_index(wd_tcp_sockets, i));
+	}
+
+	if(wd_udp_sockets) {
+		for(i = 0; i < wi_array_count(wd_udp_sockets); i++)
+			wi_socket_close(wi_array_data_at_index(wd_udp_sockets, i));
 	}
 }
 

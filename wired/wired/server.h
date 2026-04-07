@@ -42,6 +42,7 @@ void								wd_server_schedule(void);
 void								wd_server_listen(void);
 void								wd_server_apply_settings(wi_set_t *);
 void								wd_server_cleanup(void);
+void								wd_server_close_listen_sockets(void);
 
 wi_p7_message_t *					wd_client_info_message(void);
 wi_p7_message_t *					wd_server_info_message(void);

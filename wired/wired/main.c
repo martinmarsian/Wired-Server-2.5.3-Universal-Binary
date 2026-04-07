@@ -574,16 +574,19 @@ void wd_signal_thread(wi_runtime_instance_t *arg) {
 			case SIGINT:
 				wi_log_info(WI_STR("Signal INT received, quitting"));
 				wd_running = false;
+				wd_server_close_listen_sockets();
 				break;
 
 			case SIGQUIT:
 				wi_log_info(WI_STR("Signal QUIT received, quitting"));
 				wd_running = false;
+				wd_server_close_listen_sockets();
 				break;
 
 			case SIGTERM:
 				wi_log_info(WI_STR("Signal TERM received, quitting"));
 				wd_running = false;
+				wd_server_close_listen_sockets();
 				break;
 		}
 		

@@ -30,6 +30,11 @@
 
 #define	WPWiredStatusDidChangeNotification		@"WPWiredStatusDidChangeNotification"
 
+typedef NS_ENUM(NSInteger, WPLaunchMode) {
+    WPLaunchModeDaemon = 0,
+    WPLaunchModeAgent  = 1,
+};
+
 @class WPError;
 
 @interface WPWiredManager : WIObject {
@@ -51,6 +56,8 @@
 - (NSDate *)launchDate;
 - (NSString *)installedVersion;
 - (NSString *)packagedVersion;
+
+- (WPLaunchMode)launchMode;
 
 - (void)setLaunchesAutomatically:(BOOL)launchesAutomatically;
 - (BOOL)launchesAutomatically;

@@ -1,25 +1,23 @@
 #!/bin/sh
+exec 2>&1
+set -x
 
 LIBRARY="$1"
 
 LABEL="fr.read-write.WiredServer"
-PLIST="/Library/LaunchDaemons/${LABEL}.plist"
 
-# ── Stop the LaunchDaemon ─────────────────────────────────────────────────────
-# Disable first so KeepAlive does not cause launchd to restart the daemon.
-/bin/launchctl disable "system/${LABEL}" 2>&1
-/bin/launchctl bootout "system/${LABEL}" 2>&1 || \
-    /bin/launchctl bootout system "${PLIST}" 2>&1 || true
-
-# ── Also stop LaunchAgent if present (handles agent → daemon mode switch) ─────
 INSTALL_USER=$(echo "$LIBRARY" | sed -E 's,/Users/([^/]+)/.*,\1,')
 [ -z "$INSTALL_USER" ] && INSTALL_USER="$USER"
 INSTALL_UID=$(id -u "$INSTALL_USER" 2>/dev/null)
+
+PLIST="/Users/${INSTALL_USER}/Library/LaunchAgents/${LABEL}.plist"
+
+# ── Stop the LaunchAgent ───────────────────────────────────────────────────────
 if [ -n "$INSTALL_UID" ]; then
     /bin/launchctl disable "gui/${INSTALL_UID}/${LABEL}" 2>/dev/null || true
     /bin/launchctl bootout "gui/${INSTALL_UID}/${LABEL}" 2>/dev/null || true
 fi
-rm -f "/Users/${INSTALL_USER}/Library/LaunchAgents/${LABEL}.plist" 2>/dev/null || true
+rm -f "$PLIST" 2>/dev/null || true
 
 # ── Wait for wired to fully exit ──────────────────────────────────────────────
 # bootout sends SIGTERM but returns immediately; wired may take many seconds to

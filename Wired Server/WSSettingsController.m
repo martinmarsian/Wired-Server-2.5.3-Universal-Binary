@@ -113,6 +113,7 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 @synthesize verifyPasswordTextField     = _verifyPasswordTextField;
 @synthesize passwordMismatchTextField   = _passwordMismatchTextField;
 @synthesize automaticallyCheckForUpdate = _automaticallyCheckForUpdate;
+@synthesize launchModePopUpButton        = _launchModePopUpButton;
 
 @synthesize revealButton                = _revealButton;
 @synthesize updater                     = _updater;
@@ -554,6 +555,18 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 
 - (IBAction)launchAutomatically:(id)sender {
 	[_wiredManager setLaunchesAutomatically:[_launchAutomaticallyButton state]];
+}
+
+- (IBAction)setLaunchMode:(id)sender {
+	NSString *mode = ([[sender titleOfSelectedItem] isEqualToString:@"User Agent"]) ? @"agent" : @"daemon";
+	WIError *error = nil;
+	if(![_configManager setString:mode forConfigWithName:@"launchmode" andWriteWithError:&error]) {
+		if(error)
+			[[error alert] beginSheetModalForWindow:self.window];
+		// Revert popup to current value on error
+		[_launchModePopUpButton selectItemWithTitle:
+			([_wiredManager launchMode] == WPLaunchModeAgent) ? @"User Agent" : @"System Daemon"];
+	}
 }
 
 - (IBAction)enableStatusMenuItem:(id)sender {
@@ -1030,6 +1043,13 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 	
 	[_launchAutomaticallyButton setState:[_wiredManager launchesAutomatically]];
     [_automaticallyCheckForUpdate setState:([[WPSettings settings] boolForKey:@"SUEnableAutomaticChecks"] ? NSControlStateValueOn : NSControlStateValueOff)];
+
+	// Launch mode popup: enabled only when server is stopped; reflects current mode.
+	BOOL installed = [_wiredManager isInstalled];
+	BOOL running   = [_wiredManager isRunning];
+	[_launchModePopUpButton setEnabled:(installed && !running)];
+	[_launchModePopUpButton selectItemWithTitle:
+		([_wiredManager launchMode] == WPLaunchModeAgent) ? @"User Agent" : @"System Daemon"];
 }
 
 - (void)_updateSettings {
@@ -1122,6 +1142,7 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
 		
 		[_startButton setEnabled:YES];
 		[_launchAutomaticallyButton setEnabled:YES];
+		[_launchModePopUpButton setEnabled:![_wiredManager isRunning]];
 		//[_filesPopUpButton selectItemWithRepresentedObject:0];
 		[_filesPopUpButton selectItemAtIndex:1];
         [_filesPopUpButton setEnabled:YES];
@@ -1144,6 +1165,7 @@ NSString * const WPHelperBundleID = @"fr.read-write.Wired-Server-Helper";
         
 		[_startButton setEnabled:NO];
 		[_launchAutomaticallyButton setEnabled:NO];
+		[_launchModePopUpButton setEnabled:NO];
 		[_filesPopUpButton setEnabled:NO];
 		[_filesIndexButton setEnabled:NO];
 		[_filesIndexTimeTextField setEnabled:NO];

@@ -68,6 +68,7 @@ enum WPPruneEventsType {
 	IBOutlet NSButton						*_exportSettingsButton;
 	IBOutlet NSButton						*_importSettingsButton;
 	IBOutlet NSButton						*_automaticallyCheckForUpdate;
+	IBOutlet NSPopUpButton					*_launchModePopUpButton;
 	IBOutlet NSPanel						*_passwordPanel;
 	IBOutlet NSTextField					*_passwordMismatchTextField;
     IBOutlet NSWindow                       *_activityWindow;
@@ -153,6 +154,7 @@ enum WPPruneEventsType {
 @property (assign) IBOutlet NSButton					*importSettingsButton;
 
 @property (assign) IBOutlet NSButton					*automaticallyCheckForUpdate;
+@property (assign) IBOutlet NSPopUpButton				*launchModePopUpButton;
 
 @property (assign) IBOutlet NSPanel                     *passwordPanel;
 @property (assign) IBOutlet NSSecureTextField			*newyPasswordTextField;
@@ -198,6 +200,7 @@ enum WPPruneEventsType {
 
 - (IBAction)launchAutomatically:(id)sender;
 - (IBAction)enableStatusMenuItem:(id)sender;
+- (IBAction)setLaunchMode:(id)sender;
 
 - (IBAction)openLog:(id)sender;
 - (IBAction)crashReports:(id)sender;

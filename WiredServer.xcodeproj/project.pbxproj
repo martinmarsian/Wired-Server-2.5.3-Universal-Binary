@@ -93,6 +93,10 @@
 		B133499B21B1BD8D004AF77F /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B133499821B1BD8D004AF77F /* WebKit.framework */; };
 		B133499D21B1BD9F004AF77F /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B133499C21B1BD9E004AF77F /* Quartz.framework */; };
 		B133499F21B1BE6B004AF77F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B133499E21B1BE6B004AF77F /* libsqlite3.dylib */; };
+		F62B5B4C2F83DB6C0002734D /* start_agent.sh in Resources */ = {isa = PBXBuildFile; fileRef = F62B5B4B2F83DB6C0002734D /* start_agent.sh */; };
+		F62B5B4D2F83DB6C0002734D /* start_agent.sh in Resources */ = {isa = PBXBuildFile; fileRef = F62B5B4B2F83DB6C0002734D /* start_agent.sh */; };
+		F62B5B512F83DB760002734D /* stop_agent.sh in Resources */ = {isa = PBXBuildFile; fileRef = F62B5B502F83DB760002734D /* stop_agent.sh */; };
+		F62B5B522F83DB760002734D /* stop_agent.sh in Resources */ = {isa = PBXBuildFile; fileRef = F62B5B502F83DB760002734D /* stop_agent.sh */; };
 		F64C48D92F7681E70000B52B /* start.sh in Resources */ = {isa = PBXBuildFile; fileRef = F64C48D82F7681E70000B52B /* start.sh */; };
 		F64C48DD2F7681F10000B52B /* stop.sh in Resources */ = {isa = PBXBuildFile; fileRef = F64C48DC2F7681F10000B52B /* stop.sh */; };
 		F651A46E2F78098700918225 /* WiredServerTCC.mobileconfig in Resources */ = {isa = PBXBuildFile; fileRef = F651A46D2F78098700918225 /* WiredServerTCC.mobileconfig */; };
@@ -472,6 +476,8 @@
 		B133499821B1BD8D004AF77F /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/WebKit.framework; sourceTree = DEVELOPER_DIR; };
 		B133499C21B1BD9E004AF77F /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Quartz.framework; sourceTree = DEVELOPER_DIR; };
 		B133499E21B1BE6B004AF77F /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = ../../../../usr/lib/libsqlite3.dylib; sourceTree = "<group>"; };
+		F62B5B4B2F83DB6C0002734D /* start_agent.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = start_agent.sh; sourceTree = "<group>"; };
+		F62B5B502F83DB760002734D /* stop_agent.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = stop_agent.sh; sourceTree = "<group>"; };
 		F64C48D82F7681E70000B52B /* start.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = start.sh; sourceTree = "<group>"; };
 		F64C48DC2F7681F10000B52B /* stop.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = stop.sh; sourceTree = "<group>"; };
 		F651A46D2F78098700918225 /* WiredServerTCC.mobileconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = WiredServerTCC.mobileconfig; sourceTree = "<group>"; };
@@ -616,6 +622,8 @@
 				F64C48D82F7681E70000B52B /* start.sh */,
 				F64C48DC2F7681F10000B52B /* stop.sh */,
 				F6C10E282F7FF887006BC6D8 /* dsa_pub.pem */,
+				F62B5B4B2F83DB6C0002734D /* start_agent.sh */,
+				F62B5B502F83DB760002734D /* stop_agent.sh */,
 			);
 			path = "Wired Server";
 			sourceTree = "<group>";
@@ -1119,8 +1127,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C233C911521022800245506 /* InfoPlist.strings in Resources */,
+				F62B5B4D2F83DB6C0002734D /* start_agent.sh in Resources */,
 				4C233C971521022800245506 /* Credits.rtf in Resources */,
 				4C233C9D1521022900245506 /* MainMenu.xib in Resources */,
+				F62B5B512F83DB760002734D /* stop_agent.sh in Resources */,
 				4C233CA2152103FE00245506 /* WiredServerMenu.png in Resources */,
 				F6C10E292F7FF887006BC6D8 /* dsa_pub.pem in Resources */,
 				F6CF1E4C2F76BA4200E4945A /* start.sh in Resources */,
@@ -1136,6 +1146,7 @@
 			files = (
 				4C8D3363151E2D8D001A6BF7 /* InfoPlist.strings in Resources */,
 				F6C10E2A2F7FF887006BC6D8 /* dsa_pub.pem in Resources */,
+				F62B5B522F83DB760002734D /* stop_agent.sh in Resources */,
 				4C8D3369151E2D8D001A6BF7 /* Credits.rtf in Resources */,
 				4C8D336F151E2D8D001A6BF7 /* MainMenu.xib in Resources */,
 				4C8D33DC151E96E4001A6BF7 /* WiredServer.icns in Resources */,
@@ -1145,6 +1156,7 @@
 				4C8D341E151E9B0B001A6BF7 /* update.sh in Resources */,
 				4C8D3420151E9B1B001A6BF7 /* Wired in Resources */,
 				4C8D34E0151F84E3001A6BF7 /* Updates.tiff in Resources */,
+				F62B5B4C2F83DB6C0002734D /* start_agent.sh in Resources */,
 				4C4A2959151F880C0084E041 /* Console.icns in Resources */,
 				4C4A2969151F894F0084E041 /* GrayDrop.tiff in Resources */,
 				4C4A296A151F894F0084E041 /* GreenDrop.tiff in Resources */,
@@ -1408,7 +1420,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Wired Server Helper/Wired Server Helper.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = VGB467J8DZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
@@ -1423,7 +1435,7 @@
 				INFOPLIST_FILE = "Wired Server Helper/Wired Server Helper-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.5.5;
+				MARKETING_VERSION = 2.5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.${PRODUCT_NAME:rfc1034identifier}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = de.wiredserver.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1448,7 +1460,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Wired Server Helper/Wired Server Helper.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = VGB467J8DZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
@@ -1463,7 +1475,7 @@
 				INFOPLIST_FILE = "Wired Server Helper/Wired Server Helper-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.5.5;
+				MARKETING_VERSION = 2.5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.${PRODUCT_NAME:rfc1034identifier}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = de.wiredserver.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1642,7 +1654,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = VGB467J8DZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
@@ -1671,7 +1683,7 @@
 					/usr/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.5.5;
+				MARKETING_VERSION = 2.5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.${PRODUCT_NAME:rfc1034identifier}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = de.wiredserver.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1699,7 +1711,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = VGB467J8DZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
@@ -1728,7 +1740,7 @@
 					/usr/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.5.5;
+				MARKETING_VERSION = 2.5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.${PRODUCT_NAME:rfc1034identifier}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = de.wiredserver.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";

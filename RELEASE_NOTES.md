@@ -1,5 +1,115 @@
 # Wired Server — Release Notes
 
+## Version 2.5.6
+
+### What's New
+
+---
+
+### LaunchAgent Mode (User Session)
+
+A new **Launch mode** toggle in the Settings → General tab lets you choose how the Wired server runs:
+
+- **System Daemon** (default) — runs as a macOS LaunchDaemon in the system domain under a dedicated service account (`wired`). Starts automatically at boot, even before any user logs in.
+- **User Agent** — runs as a LaunchAgent in your user session. No dedicated service account is required, and the server inherits your full TCC (privacy) permissions — including access to external drives — without any additional configuration.
+
+The toggle is disabled while the server is running. To switch modes: **Stop → select mode → Start**.
+
+The chosen mode is saved as `launchmode = daemon|agent` in `wired.conf` and persists across launches.
+
+---
+
+### macOS 26 (Tahoe) Compatibility
+
+Several reliability fixes for macOS 26 (Darwin 25), where launchd's FSEvents handler triggers automatic service restarts when a plist is written to `LaunchDaemons/` or `LaunchAgents/`:
+
+- **Adaptive port-bindability probe**: After stopping the server, the scripts now wait until the TCP port is actually bindable (using a `socket.bind()` probe, up to 40 seconds) rather than a fixed-duration sleep. This adapts automatically to macOS 26's variable kernel socket-state hold time.
+- **FSEvents race fix**: The plist is now written only after the previous service instance has been fully unregistered, preventing a race between launchd's auto-start trigger and the explicit `bootstrap` call.
+- **Bootstrap "already loaded" tolerance**: If launchd auto-starts the service via FSEvents between the registration poll and the explicit `bootstrap` call, the script correctly recognises the service as running rather than exiting with an error.
+
+---
+
+### Known Limitation — Second Start Required After Stop with Active Clients
+
+On macOS 26 (Tahoe), if the server is stopped while clients are actively connected, **clicking Start once may show a brief failure state**. Clicking Start a second time starts the server reliably.
+
+**Root cause**: When active SSL connections are present at stop time, the server performs a graceful `SSL_shutdown` on each connection before exiting. This can take up to ~65 seconds. During that time the TCP port remains bound by the process, even after a forced kill. macOS 26's kernel holds the socket state for a variable period after process exit that is not visible to standard tools. The adaptive probe mitigates this but cannot guarantee the port is free within the poll window in all cases.
+
+**Workaround**: Wait a few seconds after Stop, then click Start again. In normal daily operation — where the mode is set once and left unchanged — this situation only arises after an explicit Stop with active connected clients.
+
+---
+
+### System Requirements
+
+| | |
+|---|---|
+| **macOS** | 10.13 High Sierra or later |
+| **Architecture** | Universal (Apple Silicon + Intel) |
+| **Privileges** | Administrator password required for Install / Start / Stop |
+
+---
+
+### Upgrading from 2.5.5
+
+No migration required. Sparkle will offer the update automatically if **Check for Updates at Launch** is enabled, or click **Check for Updates…** in the Updates tab.
+
+The default launch mode after upgrade is **System Daemon** — no change in behaviour from 2.5.5.
+
+---
+
+## Version 2.5.5
+
+### What's New
+
+---
+
+### Port Check Fixed
+
+The built-in internet port checker now uses **portchecker.co** as the primary service with hackertarget.com as a fallback. The previous single-service approach was frequently rate-limited and returned false negatives even when the port was reachable.
+
+---
+
+### Auto-Update Checks on Every Launch
+
+Wired Server now checks for available updates immediately at every launch, rather than waiting for Sparkle's built-in 24-hour interval to expire. The check runs silently in the background a few seconds after startup so it does not delay the app's responsiveness.
+
+---
+
+### Updates Tab in Settings
+
+A new **Updates** tab in the Settings window lets you enable or disable automatic update checks and automatic downloads independently.
+
+---
+
+### Window Position and Size Remembered
+
+The Settings window now saves and restores its exact position and size across launches. The window opens exactly where you left it.
+
+---
+
+### Distribution
+
+- **`WiredServer-2.5.5.zip`** — used by Sparkle for in-app auto-update. Both the ZIP and the app inside are notarized by Apple.
+- **`WiredServer-2.5.5.dmg`** — for manual download and installation. Notarized and stapled (works offline without a Gatekeeper warning).
+
+---
+
+### System Requirements
+
+| | |
+|---|---|
+| **macOS** | 10.13 High Sierra or later |
+| **Architecture** | Universal (Apple Silicon + Intel) |
+| **Privileges** | Administrator password required for Install / Start / Stop |
+
+---
+
+### Upgrading from 2.5.4
+
+No migration required. Sparkle will offer the update automatically if **Check for Updates at Launch** is enabled, or click **Check for Updates…** in the Updates tab.
+
+---
+
 ## Version 2.5.4
 
 ### What's New

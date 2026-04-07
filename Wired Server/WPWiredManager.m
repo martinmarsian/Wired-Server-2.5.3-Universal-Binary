@@ -27,6 +27,7 @@
  */
 
 #import <Security/Authorization.h>
+#import <libproc.h>
 #import "WPError.h"
 #import "WPSettings.h"
 #import "WPWiredManager.h"
@@ -82,7 +83,7 @@
 
 
 - (BOOL)_reloadPidFile {
-	NSString		*string, *command;
+	NSString		*string;
 	BOOL			running = NO;
 
 	string = [NSString stringWithContentsOfFile:[self pathForFile:@"wired.pid"]
@@ -90,14 +91,26 @@
 										  error:NULL];
 
 	if(string) {
-		command = [[NSWorkspace sharedWorkspace] commandForProcessIdentifier:[string unsignedIntValue]];
-
-		if([command isEqualToString:@"wired"]) {
-			_pid = [string unsignedIntegerValue];
-
-			running = YES;
-		} else {
-            [[NSFileManager defaultManager] removeItemAtPath:[self pathForFile:@"wired.pid"] error:nil];
+		pid_t pid = (pid_t)[string intValue];
+		if(pid > 0) {
+			// Check if the process exists (kill -0 returns 0 if it exists,
+			// EPERM if it exists but is owned by another user).
+			if(kill(pid, 0) == 0 || errno == EPERM) {
+				char name[PROC_PIDPATHINFO_MAXSIZE];
+				int nameLen = proc_name(pid, name, sizeof(name));
+				// proc_name may fail (return 0) for processes owned by another
+				// user (e.g. the "wired" service user). Trust the pid file in
+				// that case — only the wired daemon writes to wired.pid.
+				if(nameLen <= 0 || strcmp(name, "wired") == 0) {
+					_pid = (NSUInteger)pid;
+					running = YES;
+				} else {
+					// Process exists but has a different name → stale pid file.
+					[[NSFileManager defaultManager] removeItemAtPath:[self pathForFile:@"wired.pid"] error:nil];
+				}
+			} else {
+				[[NSFileManager defaultManager] removeItemAtPath:[self pathForFile:@"wired.pid"] error:nil];
+			}
 		}
 	}
 
@@ -395,17 +408,50 @@
 
 #pragma mark -
 
+// Returns the path to whichever plist is currently active (daemon or agent).
+- (NSString *)_launchPlistPath {
+	if([self launchMode] == WPLaunchModeAgent) {
+		return [[NSHomeDirectory()
+			stringByAppendingPathComponent:@"Library/LaunchAgents"]
+			stringByAppendingPathComponent:@"fr.read-write.WiredServer.plist"];
+	}
+	return WPWiredLaunchDaemonPlistPath;
+}
+
+// Reads launchmode from wired.conf; defaults to daemon.
+- (WPLaunchMode)launchMode {
+	NSString *conf = [NSString stringWithContentsOfFile:[self pathForFile:@"etc/wired.conf"]
+											   encoding:NSUTF8StringEncoding
+												  error:nil];
+	if(conf) {
+		for(NSString *line in [conf componentsSeparatedByString:@"\n"]) {
+			NSString *t = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+			if([t hasPrefix:@"launchmode"]) {
+				NSRange eq = [t rangeOfString:@"="];
+				if(eq.location != NSNotFound) {
+					NSString *val = [[t substringFromIndex:eq.location + 1]
+						stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+					if([val isEqualToString:@"agent"])
+						return WPLaunchModeAgent;
+				}
+				break;
+			}
+		}
+	}
+	return WPLaunchModeDaemon;
+}
+
 - (void)setLaunchesAutomatically:(BOOL)launchesAutomatically {
 	NSString	*value;
 
-	// Update the Disabled key in the LaunchDaemon plist using PlistBuddy (requires root)
+	// Update the Disabled key in the active launch plist using PlistBuddy (requires root)
 	value = launchesAutomatically ? @"false" : @"true";
 
 	[self _runPrivilegedPath:@"/usr/libexec/PlistBuddy"
 				   arguments:@[
 					   @"-c",
 					   [NSString stringWithFormat:@"Set :Disabled %@", value],
-					   WPWiredLaunchDaemonPlistPath
+					   [self _launchPlistPath]
 				   ]
 				   errorCode:WPPreferencePaneStartFailed
 					   error:NULL];
@@ -416,8 +462,8 @@
 - (BOOL)launchesAutomatically {
 	NSDictionary *dictionary;
 
-	// The LaunchDaemon plist is world-readable; no elevated privileges needed
-	dictionary = [NSDictionary dictionaryWithContentsOfFile:WPWiredLaunchDaemonPlistPath];
+	// The plist is world-readable; no elevated privileges needed
+	dictionary = [NSDictionary dictionaryWithContentsOfFile:[self _launchPlistPath]];
 	return ![dictionary boolForKey:@"Disabled"];
 }
 
@@ -528,28 +574,38 @@
 
 - (BOOL)startWithError:(WPError **)error {
 	BOOL result;
-	NSString *scriptPath;
+	NSString *scriptName, *scriptPath;
+	NSString *library = [WPLibraryPath stringByExpandingTildeInPath];
 
-	// Stop any currently-running instance first so that it releases its
-	// SQLite connection before start.sh re-bootstraps the LaunchDaemon.
-	// stop.sh always emits WIREDSERVER_SCRIPT_OK, so this succeeds even when
-	// wired is not currently running.
-	[self stopWithError:nil];
+	// Always stop BOTH daemon and agent before starting, regardless of the
+	// currently configured mode. When the user switches modes, launchMode
+	// already reflects the NEW mode, so [self stopWithError:nil] would call
+	// the wrong stop script (a no-op), leaving the old service running and
+	// its port held when the new service tries to bind. Running both stop
+	// scripts unconditionally guarantees neither service is still running.
+	for(NSString *stopName in @[@"stop", @"stop_agent"]) {
+		NSString *stopPath = [[self bundle] pathForResource:stopName ofType:@"sh"];
+		if(stopPath)
+			[self _runPrivilegedPath:@"/bin/sh"
+							arguments:@[stopPath, library]
+							errorCode:WPPreferencePaneStopFailed
+								error:nil];
+	}
 
-	// start.sh:
-	//   1. ensures the macOS service user/group from wired.conf exist
-	//   2. fixes ownership and regenerates the LaunchDaemon plist
-	//   3. bootstraps the daemon into the system domain via launchctl
-	//   4. pre-builds the file index via rebuild-index.sh in the logged-in
-	//      user's TCC session (launchctl asuser) so external-volume listings
-	//      are available even without Full Disk Access granted to the daemon
-	scriptPath = [[self bundle] pathForResource:@"start" ofType:@"sh"];
+	// Select the correct start script based on the configured launch mode.
+	// start.sh      → LaunchDaemon (system domain, dedicated service user)
+	// start_agent.sh → LaunchAgent (gui domain, runs as logged-in user)
+	scriptName = ([self launchMode] == WPLaunchModeAgent) ? @"start_agent" : @"start";
+	scriptPath = [[self bundle] pathForResource:scriptName ofType:@"sh"];
 	result = [self _runPrivilegedPath:@"/bin/sh"
-							arguments:@[scriptPath, [WPLibraryPath stringByExpandingTildeInPath]]
+							arguments:@[scriptPath, library]
 							errorCode:WPPreferencePaneStartFailed
 								error:error];
 
-	[_statusTimer fire];
+	// _statusTimer must always be fired on the main thread.
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[_statusTimer fire];
+	});
 
 	return result;
 }
@@ -570,17 +626,22 @@
 
 - (BOOL)stopWithError:(WPError **)error {
 	BOOL result;
-	NSString *scriptPath;
+	NSString *scriptName, *scriptPath;
 
-	// stop.sh passes LIBRARY so it can also clean up a legacy LaunchAgent
-	// entry in the gui/<uid> domain during migration.
-	scriptPath = [[self bundle] pathForResource:@"stop" ofType:@"sh"];
+	// Select the correct stop script based on the configured launch mode.
+	// stop.sh       → stops LaunchDaemon (system domain)
+	// stop_agent.sh → stops LaunchAgent (gui domain)
+	scriptName = ([self launchMode] == WPLaunchModeAgent) ? @"stop_agent" : @"stop";
+	scriptPath = [[self bundle] pathForResource:scriptName ofType:@"sh"];
 	result = [self _runPrivilegedPath:@"/bin/sh"
 							arguments:@[scriptPath, [WPLibraryPath stringByExpandingTildeInPath]]
 							errorCode:WPPreferencePaneStopFailed
 								error:error];
 
-	[_statusTimer fire];
+	// _statusTimer must always be fired on the main thread.
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[_statusTimer fire];
+	});
 
 	return result;
 }

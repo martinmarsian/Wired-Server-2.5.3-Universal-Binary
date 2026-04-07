@@ -31,6 +31,7 @@
                 <outlet property="installButton" destination="1728" id="1813"/>
                 <outlet property="installProgressIndicator" destination="1734" id="1800"/>
                 <outlet property="launchAutomaticallyButton" destination="1739" id="urD-wI-7Dx"/>
+                <outlet property="launchModePopUpButton" destination="WMs-LM-seg" id="WMs-LM-out"/>
                 <outlet property="logTableColumn" destination="1744" id="1810"/>
                 <outlet property="logTableView" destination="1743" id="1807"/>
                 <outlet property="newyPasswordTextField" destination="1872" id="L0E-lM-m4a"/>
@@ -226,11 +227,11 @@ Gw
             <point key="canvasLocation" x="-68" y="261"/>
         </window>
         <customView id="812" userLabel="General">
-            <rect key="frame" x="0.0" y="0.0" width="493" height="147"/>
+            <rect key="frame" x="0.0" y="0.0" width="493" height="170"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1727">
-                    <rect key="frame" x="237" y="85" width="239" height="14"/>
+                    <rect key="frame" x="237" y="108" width="239" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="&lt;&lt;do not localize&gt;&gt;" id="1756">
                         <font key="font" metaFont="label" size="11"/>
@@ -239,7 +240,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1728">
-                    <rect key="frame" x="104" y="107" width="104" height="19"/>
+                    <rect key="frame" x="104" y="130" width="104" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" title="Install" bezelStyle="roundedRect" alignment="center" borderStyle="border" inset="2" id="1755">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -250,7 +251,7 @@ Gw
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1731">
-                    <rect key="frame" x="104" y="81" width="104" height="19"/>
+                    <rect key="frame" x="104" y="104" width="104" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" title="Start" bezelStyle="roundedRect" alignment="center" borderStyle="border" inset="2" id="1752">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -261,20 +262,20 @@ Gw
                     </connections>
                 </button>
                 <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" minValue="16" maxValue="100" doubleValue="16" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="1734">
-                    <rect key="frame" x="80" y="108" width="16" height="16"/>
+                    <rect key="frame" x="80" y="131" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                 </progressIndicator>
                 <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" minValue="16" maxValue="100" doubleValue="16" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="1735">
-                    <rect key="frame" x="80" y="82" width="16" height="16"/>
+                    <rect key="frame" x="80" y="105" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                 </progressIndicator>
                 <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1738">
-                    <rect key="frame" x="216" y="84" width="16" height="16"/>
+                    <rect key="frame" x="216" y="107" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="GreenDrop" id="1747"/>
                 </imageView>
                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1739">
-                    <rect key="frame" x="214" y="43" width="22" height="18"/>
+                    <rect key="frame" x="214" y="66" width="22" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="1746">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -285,7 +286,7 @@ Gw
                     </connections>
                 </button>
                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1764">
-                    <rect key="frame" x="214" y="18" width="22" height="18"/>
+                    <rect key="frame" x="214" y="41" width="22" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="1765">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -296,7 +297,7 @@ Gw
                     </connections>
                 </button>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1772">
-                    <rect key="frame" x="237" y="110" width="239" height="17"/>
+                    <rect key="frame" x="237" y="133" width="239" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Wired Server 2.5" id="1773">
                         <font key="font" metaFont="systemBold"/>
@@ -305,7 +306,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1918">
-                    <rect key="frame" x="216" y="109" width="16" height="17"/>
+                    <rect key="frame" x="216" y="132" width="16" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSFollowLinkFreestandingTemplate" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="1919">
                         <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
@@ -316,7 +317,7 @@ Gw
                     </connections>
                 </button>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1975">
-                    <rect key="frame" x="28" y="45" width="183" height="17"/>
+                    <rect key="frame" x="28" y="68" width="183" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Launch Wired Automatically:" id="1976">
                         <font key="font" metaFont="system"/>
@@ -325,7 +326,7 @@ Gw
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1977">
-                    <rect key="frame" x="80" y="20" width="131" height="17"/>
+                    <rect key="frame" x="80" y="43" width="131" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Enable Status Menu:" id="1978">
                         <font key="font" metaFont="system"/>
@@ -333,6 +334,36 @@ Gw
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WMs-LM-lbl">
+                    <rect key="frame" x="51" y="19" width="160" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Launch mode:" id="WMs-LM-lbc">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WMs-LM-seg">
+                    <rect key="frame" x="214" y="13" width="200" height="26"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <popUpButtonCell key="cell" type="push" title="System Daemon" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" selectedItem="WMs-LM-i1" id="WMs-LM-puc">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="menu"/>
+                        <menu key="menu" id="WMs-LM-mnu">
+                            <items>
+                                <menuItem title="System Daemon" id="WMs-LM-i1">
+                                    <modifierMask key="keyEquivalentModifierMask"/>
+                                </menuItem>
+                                <menuItem title="User Agent" id="WMs-LM-i2">
+                                    <modifierMask key="keyEquivalentModifierMask"/>
+                                </menuItem>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="setLaunchMode:" target="-2" id="WMs-LM-act"/>
+                    </connections>
+                </popUpButton>
             </subviews>
             <point key="canvasLocation" x="-66" y="-48"/>
         </customView>

@@ -403,17 +403,9 @@ wi_socket_t * wi_socket_init_with_address(wi_socket_t *_socket, wi_address_t *ad
 	
 	if(!_wi_socket_set_option_int(_socket, SOL_SOCKET, SO_REUSEADDR, 1)) {
 		wi_release(_socket);
-		
+
 		return NULL;
 	}
-	
-#ifdef SO_REUSEPORT
-	if(!_wi_socket_set_option_int(_socket, SOL_SOCKET, SO_REUSEPORT, 1)) {
-		wi_release(_socket);
-		
-		return NULL;
-	}
-#endif
 
 	return _socket;
 }
