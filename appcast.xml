@@ -271,5 +271,56 @@ ZcI5+/6nZ0gbhcIPOmEFlmTzxoEjqqY="/>
         sparkle:dsaSignature="MEUCIQC6GlH9zNrb/X0Ic32RZX7GbE6puBpg2nDWMbpJ8L8XAAIgYZCt0OSY2t15fa2G9iwi2vR0lQDcOiANSdnOwgmAYsI="/>
     </item>
 
+
+    <item>
+      <title>Wired Server 2.5.5</title>
+      <pubDate>Mo., 06 Apr. 2026 10:16:04 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/tag/v2.5.5
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/download/v2.5.5/WiredServer-2.5.5.zip"
+        sparkle:version="26"
+        sparkle:shortVersionString="2.5.5"
+        type="application/zip"
+        length="7257793"
+        sparkle:dsaSignature="MEYCIQC2VpE51uVOmRbJyW95kaRHS2bWfmCNip0gYx7pUOeRFAIhAI94T/vqd2tD9L+J798p2hw709vhEEeCKiTkMPq1/zWe"/>
+    </item>
+
+
+    <item>
+      <title>Wired Server 2.5.6</title>
+      <pubDate>Di., 07 Apr. 2026 12:37:37 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/tag/v2.5.6
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/download/v2.5.6/WiredServer-2.5.6.zip"
+        sparkle:version="32"
+        sparkle:shortVersionString="2.5.6"
+        type="application/zip"
+        length="7257795"
+        sparkle:dsaSignature="MEUCIQCUrgFfPLEkiySvJj6JFbPKyv+gB64M6u11klPoDLsvRQIgfjyd/ceDF6bKzAVQEh/ELbNxP57AzPzZcJP12Ri+fbo="/>
+    </item>
+
+
+    <item>
+      <title>Wired Server 2.5.6</title>
+      <pubDate>Di., 07 Apr. 2026 13:00:43 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/tag/v2.5.6
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/download/v2.5.6/WiredServer-2.5.6.zip"
+        sparkle:version="32"
+        sparkle:shortVersionString="2.5.6"
+        type="application/zip"
+        length="7276341"
+        sparkle:dsaSignature="MEUCIQCXl/iFFa5+xrVWpUR6mt3oaM54n+07o3IVC0FdA1SyAQIgA0mKPwClc+BMCBHOZgEsrfW8LG3aYsQyYjNkESA6jtg="/>
+    </item>
+
   </channel>
 </rss>
