@@ -753,11 +753,11 @@ Gw
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1565">
-                    <rect key="frame" x="133" y="18" width="133" height="25"/>
+                    <rect key="frame" x="68" y="17" width="150" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" title="Check For Updates" bezelStyle="texturedRounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1566">
+                    <buttonCell key="cell" type="roundRect" title="Check For Updates" bezelStyle="roundedRect" alignment="center" borderStyle="border" inset="2" id="1566">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
+                        <font key="font" metaFont="cellTitle"/>
                     </buttonCell>
                     <connections>
                         <action selector="checkForUpdate:" target="-2" id="1824"/>
