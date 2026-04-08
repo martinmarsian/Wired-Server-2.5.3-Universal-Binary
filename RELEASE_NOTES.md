@@ -1,5 +1,72 @@
 # Wired Server — Release Notes
 
+## Version 2.5.7
+
+### What's New
+
+---
+
+### Auto-Update Upgraded to Sparkle 2.9.0 (EdDSA Signatures)
+
+The built-in auto-update framework has been upgraded from Sparkle 1.x to **Sparkle 2.9.0**. This is a fully transparent upgrade — the update check, download, and installation experience is unchanged for users.
+
+**What changed under the hood:**
+
+- Update packages are now signed with **EdDSA** (Ed25519) instead of DSA — a modern elliptic-curve algorithm that is faster and produces smaller, stronger signatures
+- The Sparkle framework itself is now distributed as an XPC-based architecture, improving security through process isolation (the download and install steps run in separate sandboxed XPC services)
+- Sparkle 2.x uses a dedicated **Updater.app** instead of the legacy `Autoupdate.app`
+
+Users upgrading from 2.5.6 will receive this update via Sparkle 1.x with a DSA-signed package, which remains fully compatible. From 2.5.7 onwards, all future updates use EdDSA-only signatures.
+
+---
+
+### 7 Security Hardening Fixes
+
+This release includes seven backward-compatible security fixes across the server daemon and the macOS app. No client-side changes are required.
+
+**macOS App (WiredServer.app):**
+
+- **SQL injection prevention** — Three database queries in the account manager (create admin, set password, delete account) now use parameterized statements (`sqlite3_prepare_v2` / `sqlite3_bind_text`) instead of interpolated SQL strings.
+- **Password removed from system log** — A debug `NSLog` statement that wrote the admin password in plaintext to the system console on account creation has been removed.
+- **ZIP path traversal (Zip Slip) prevention** — The settings import function now validates all entries in an uploaded ZIP archive before extraction. Archives containing absolute paths or `../` traversal components are rejected with an error.
+
+**Wired Server Daemon (C):**
+
+- **TLS 1.2 minimum** — Connections to the Wired tracker now require TLS 1.2 or higher. TLS 1.0 and TLS 1.1 are explicitly disabled.
+- **Decompression bomb protection** — Compressed P7 protocol messages are now rejected if the decompressed size exceeds 64 MB, preventing a potential memory exhaustion attack via crafted compressed payloads.
+- **P7 message bounds checks fixed** — Three inverted comparison operators in the P7 message parser (`offset + message_size < sizeof(x)`) have been corrected to `offset + sizeof(x) > message_size`. The previous code failed to detect out-of-bounds reads when field sizes exceeded the message boundary.
+- **Pre-authentication connection rate limit** — The server now enforces a limit of 50 simultaneous half-open (pre-handshake) connections. Excess connections are logged and dropped before the RSA handshake begins, protecting against connection-exhaustion attacks.
+
+---
+
+### `launchmode` Setting No Longer Logged as Unknown
+
+The `launchmode` key written to `wired.conf` by the macOS app (to record the chosen System Daemon / User Agent mode) was previously logged as an unknown setting by the wired daemon at startup:
+
+```
+Could not interpret the setting "launchmode": Unknown setting name
+```
+
+The daemon now recognises and silently ignores this key.
+
+---
+
+### System Requirements
+
+| | |
+|---|---|
+| **macOS** | 10.13 High Sierra or later |
+| **Architecture** | Universal (Apple Silicon + Intel) |
+| **Privileges** | Administrator password required for Install / Start / Stop |
+
+---
+
+### Upgrading from 2.5.6
+
+No migration required. Sparkle will offer the update automatically if **Check for Updates at Launch** is enabled, or click **Check for Updates…** in the Updates tab.
+
+---
+
 ## Version 2.5.6
 
 ### What's New
