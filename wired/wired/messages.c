@@ -68,6 +68,7 @@ static void							wd_message_chat_invite_user(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_chat_decline_invitation(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_chat_kick_user(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_message_send_message(wd_user_t *, wi_p7_message_t *);
+static void							wd_message_message_send_offline_message(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_message_send_broadcast(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_board_get_boards(wd_user_t *, wi_p7_message_t *);
 static void							wd_message_board_get_threads(wd_user_t *, wi_p7_message_t *);
@@ -169,6 +170,7 @@ void wd_messages_initialize(void) {
 	WD_MESSAGE_HANDLER(WI_STR("wired.chat.decline_invitation"), wd_message_chat_decline_invitation);
 	WD_MESSAGE_HANDLER(WI_STR("wired.chat.kick_user"), wd_message_chat_kick_user);
 	WD_MESSAGE_HANDLER(WI_STR("wired.message.send_message"), wd_message_message_send_message);
+	WD_MESSAGE_HANDLER(WI_STR("wired.message.send_offline_message"), wd_message_message_send_offline_message);
 	WD_MESSAGE_HANDLER(WI_STR("wired.message.send_broadcast"), wd_message_message_send_broadcast);
 	WD_MESSAGE_HANDLER(WI_STR("wired.board.get_boards"), wd_message_board_get_boards);
 	WD_MESSAGE_HANDLER(WI_STR("wired.board.get_threads"), wd_message_board_get_threads);
@@ -487,6 +489,37 @@ static void wd_message_send_login(wd_user_t *user, wi_p7_message_t *message) {
 	wd_user_reply_message(user, reply, message);
 
 	wd_accounts_update_login_time(account);
+
+	/* Deliver pending offline messages for this user */
+	{
+		wi_sqlite3_statement_t	*statement;
+		wi_dictionary_t			*row;
+		wi_p7_message_t			*pending;
+		wi_string_t				*sender_nick, *msg_text, *row_id;
+
+		statement = wi_sqlite3_prepare_statement(wd_database,
+			WI_STR("SELECT id, sender_nick, message FROM pending_messages "
+			       "WHERE recipient_login = ? AND delivered_at IS NULL "
+			       "ORDER BY sent_at ASC"),
+			login, NULL);
+
+		if(statement) {
+			while((row = wi_sqlite3_fetch_statement_results(wd_database, statement)) && wi_dictionary_count(row) > 0) {
+				row_id      = wi_dictionary_data_for_key(row, WI_STR("id"));
+				sender_nick = wi_dictionary_data_for_key(row, WI_STR("sender_nick"));
+				msg_text    = wi_dictionary_data_for_key(row, WI_STR("message"));
+
+				pending = wi_p7_message_with_name(WI_STR("wired.message.offline_message_delivered"), wd_p7_spec);
+				wi_p7_message_set_string_for_name(pending, sender_nick, WI_STR("wired.message.offline_sender_nick"));
+				wi_p7_message_set_string_for_name(pending, msg_text, WI_STR("wired.message.message"));
+				wd_user_send_message(user, pending);
+
+				wi_sqlite3_execute_statement(wd_database,
+					WI_STR("UPDATE pending_messages SET delivered_at = DATETIME('now') WHERE id = ?"),
+					row_id, NULL);
+			}
+		}
+	}
 }
 
 
@@ -1089,6 +1122,44 @@ static void wd_message_message_send_message(wd_user_t *user, wi_p7_message_t *me
 	
 	wd_events_add_event(WI_STR("wired.event.message.sent"), user,
 		wd_user_nick(peer), NULL);
+}
+
+
+
+static void wd_message_message_send_offline_message(wd_user_t *user, wi_p7_message_t *message) {
+	wi_string_t		*recipient_login, *msg_text;
+
+	if(!wd_account_message_send_messages(wd_user_account(user))) {
+		wd_user_reply_error(user, WI_STR("wired.error.permission_denied"), message);
+		return;
+	}
+
+	recipient_login = wi_p7_message_string_for_name(message, WI_STR("wired.message.offline_recipient"));
+	msg_text        = wi_p7_message_string_for_name(message, WI_STR("wired.message.message"));
+
+	/* Verify the recipient account exists */
+	if(!wd_accounts_read_user(recipient_login)) {
+		wd_user_reply_error(user, WI_STR("wired.error.account_not_found"), message);
+		return;
+	}
+
+	if(!wi_sqlite3_execute_statement(wd_database,
+		WI_STR("INSERT INTO pending_messages (sender_login, sender_nick, recipient_login, message) "
+		       "VALUES (?, ?, ?, ?)"),
+		wd_user_login(user),
+		wd_user_nick(user),
+		recipient_login,
+		msg_text,
+		NULL)) {
+		wi_log_error(WI_STR("Could not store offline message: %m"));
+		wd_user_reply_error(user, WI_STR("wired.error.internal_error"), message);
+		return;
+	}
+
+	wd_user_reply_okay(user, message);
+
+	wd_events_add_event(WI_STR("wired.event.message.sent"), user,
+		recipient_login, NULL);
 }
 
 

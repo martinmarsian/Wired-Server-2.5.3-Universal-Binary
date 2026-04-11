@@ -458,6 +458,19 @@ static void wd_database_open(void) {
 									 NULL)) {
 		wi_log_fatal(WI_STR("Could not execute database statement: %m"));
 	}
+
+	if(!wi_sqlite3_execute_statement(wd_database, WI_STR("CREATE TABLE IF NOT EXISTS pending_messages ( "
+														 "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+														 "sender_login TEXT NOT NULL, "
+														 "sender_nick TEXT NOT NULL, "
+														 "recipient_login TEXT NOT NULL, "
+														 "message TEXT NOT NULL, "
+														 "sent_at TEXT NOT NULL DEFAULT (DATETIME('now')), "
+														 "delivered_at TEXT DEFAULT NULL"
+														 ")"),
+									 NULL)) {
+		wi_log_fatal(WI_STR("Could not execute database statement: %m"));
+	}
 }
 
 
