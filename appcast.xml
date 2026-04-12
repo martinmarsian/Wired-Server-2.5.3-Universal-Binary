@@ -339,5 +339,22 @@ ZcI5+/6nZ0gbhcIPOmEFlmTzxoEjqqY="/>
         sparkle:edSignature="vf9qo5SaSCVnnbhVT2MTE1MSHI8836CQGoMC4u0hqioN8u6bwsqD/6VpVdXRuB9TMBdV2ETZUDBSnve3IcG9Cg==" sparkle:dsaSignature="MEQCIASYsHWGqs46WPLTyRdIPzyiOAjV/Z7PJkqwtNLBVXmIAiBESlnwTvs7fH0UckMoAaVlbIBvhOgzs9BH3EWBLBwCrw=="/>
     </item>
 
+
+    <item>
+      <title>Wired Server 2.5.8</title>
+      <pubDate>Sa., 11 Apr. 2026 17:48:44 +0000</pubDate>
+      <sparkle:releaseNotesLink>
+        https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/tag/v2.5.8
+      </sparkle:releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.13</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/martinmarsian/Wired-Server-Universal-Binary/releases/download/v2.5.8/WiredServer-2.5.8.zip"
+        sparkle:version="35"
+        sparkle:shortVersionString="2.5.8"
+        type="application/zip"
+        length="7252851"
+        sparkle:edSignature="+EhETUr6gJPmUpmPuWEXC8wO75xSZRsckygcm0Akc68irXaNts+m/GHqRwCi43xTPjVSQe02Lo6+Ywt5R8FSBw==" sparkle:dsaSignature="MEYCIQDL6OG6NYOo76kCuo1ctLGDDLrxx9GjxlvogGpSnnATDwIhAOYY/eLDrhmmkEhg8u06NVOtyLflgkCLlapJq5IfoLx1"/>
+    </item>
+
   </channel>
 </rss>
