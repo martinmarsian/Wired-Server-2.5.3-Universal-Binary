@@ -520,6 +520,39 @@ static void wd_message_send_login(wd_user_t *user, wi_p7_message_t *message) {
 			}
 		}
 	}
+
+	/* Send recently-active users (logged in within last 30 days) so clients can
+	   populate their offline-user cache without requiring admin privileges. */
+	{
+		wi_sqlite3_statement_t	*ku_statement;
+		wi_dictionary_t			*ku_row;
+		wi_p7_message_t			*ku_msg;
+		wi_string_t				*ku_name, *ku_full_name;
+
+		ku_statement = wi_sqlite3_prepare_statement(wd_database,
+			WI_STR("SELECT name, full_name FROM users "
+			       "WHERE login_time >= DATETIME('now', '-30 days') AND name != ?"),
+			login, NULL);
+
+		if(ku_statement) {
+			while((ku_row = wi_sqlite3_fetch_statement_results(wd_database, ku_statement)) && wi_dictionary_count(ku_row) > 0) {
+				ku_name      = wi_dictionary_data_for_key(ku_row, WI_STR("name"));
+				ku_full_name = wi_dictionary_data_for_key(ku_row, WI_STR("full_name"));
+
+				/* Fall back to login name if no display name is set */
+				if(!ku_full_name || wi_string_length(ku_full_name) == 0)
+					ku_full_name = ku_name;
+
+				ku_msg = wi_p7_message_with_name(WI_STR("wired.user.known_users"), wd_p7_spec);
+				wi_p7_message_set_string_for_name(ku_msg, ku_name, WI_STR("wired.user.login"));
+				wi_p7_message_set_string_for_name(ku_msg, ku_full_name, WI_STR("wired.user.nick"));
+				wd_user_send_message(user, ku_msg);
+			}
+		}
+
+		ku_msg = wi_p7_message_with_name(WI_STR("wired.user.known_users.done"), wd_p7_spec);
+		wd_user_send_message(user, ku_msg);
+	}
 }
 
 
